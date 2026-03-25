@@ -1,10 +1,12 @@
 package kr.hs.dgsw_security.config.jwt;
 
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import kr.hs.dgsw_security.domain.User;
 import kr.hs.dgsw_security.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -71,11 +73,54 @@ public class TokenProvider {
 
     /* token 유효성 검증 테스트 */
     public boolean validToken(String token) {
-        Jwts.parser()
+        try {
+            Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token);
+            return true;
+        }catch (Exception e){ /* 원래는 아래 예외 목록들 포함하여 다 처리해줘야함. */
+            return false;
+        }
+    }
+    /*
+     * 예외.
+     * 서명이 조작 - SignatureException
+     * 유효기간이 지난거 - ExpiredJwtException
+     * 토큰 모양 이상한거 - MalformedJwtException
+     * 토큰값 없을때 - IllegalArgumentException
+     * 지원하지 않는 양식 - UnsupportedJwtException
+     * */
+
+    /* claim 정보(사용자 정보)를 가져오기 - Payload */
+    public Claims getClaims(String token) {
+        return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
-                .parseSignedClaims(token);
-        boolean isCheck = true;
-        return isCheck;
+                .parseSignedClaims(token)
+                .getPayload();
+    }
+
+    /* subject 뽑아내기, 등록된 claim 정보 */
+    public String getSubject(String token) {
+        return getClaims(token).getSubject();
+    }
+
+    /* 비공개(공개도 가능) claim은 어떻게 뽑아내죠? Map 형태로 정보를 넣어줘야함 */
+    public Long getUserId(String token) {
+        return getClaims(token).get("id", Long.class);
+    }
+
+    /* Security랑 연결하기
+     * 역할 - JWT애서 정보를 뽑아서 Authentication의 출입증으로 작용
+     * Security가 알아먹을 수 있는 객체로 변환해주는 역할
+     * 아는거
+     *     - 사용자 정보: UserDetails
+     *     - 인증: Authentication
+     * */
+
+    public Authentication getAuthentication(String token) {
+        String email = getSubject(token); /* 시용자 이메일 */
+
     }
 }
