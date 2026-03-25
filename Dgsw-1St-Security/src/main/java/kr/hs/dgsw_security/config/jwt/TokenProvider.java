@@ -1,0 +1,81 @@
+package kr.hs.dgsw_security.config.jwt;
+
+import io.jsonwebtoken.Jwts;
+import jakarta.annotation.PostConstruct;
+import kr.hs.dgsw_security.domain.User;
+import kr.hs.dgsw_security.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
+
+import javax.crypto.SecretKey;
+import java.time.Duration;
+import java.util.Date;
+
+@Service
+@RequiredArgsConstructor
+public class TokenProvider {
+    private final JwtProperties jwtProperties;
+    private final UserRepository userRepository;
+    private SecretKey secretKey;
+
+    /*
+     * 생성자 전에 실행되는 함수
+     * 메서드 안에서 객체를 만드는 방법 -> Bean
+     * */
+    @PostConstruct
+    void inIt() {
+        byte[] keyBytes = Decoders.BASE64.decode( jwtProperties.getSecretKey() );
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
+    }
+
+    /*
+     * Spring Bean lifesycle
+     * 1. 스프링 컨테이너가 생성
+     * 2. Bean 생성
+     * 3. 의존성 주입
+     * 4. @PostConstruct : 1번만 실행,  의존성 주입이 끝난 후에 초기화 작업을 수행하는 메서드에 붙이는 어노테이션
+     * 5. Bean 사용
+     * 6. 객체 소멸 Callback( @PreDestroy )
+     * 7. 스프링 종료
+     * */
+
+    public String createToken(User user, Duration expireAt) {
+        Date now = new Date(); /* 자바에서는 원래 calendar써야함 */
+        return makeToken(new Date(now.getTime() + expireAt.toMillis()), user);
+    }
+
+    private String makeToken(Date expire, User user) {
+        Date now = new Date();
+        /*
+         * 여기서 builder 패턴이 좋대여
+         * 보통은 bouild() 메서드를 쓰는데 Jwts는 compact()를 사용
+         * */
+        return Jwts.builder()
+                .header().type("JWT")
+                .and()                             /* header와 claim의 구분자라고 생각하면됨. 다른 기능은 X */
+                .issuer(jwtProperties.getIssuer()) /* token 발급자 */
+                .issuedAt(now)                     /* token 발급 시간 */
+                .expiration(expire)                /* token 만료 시간 */
+                .subject(user.getEmail())          /* token 주체 */
+                .claim("id", user.getId())         /* claim 추가, 원하는 값을 (key, value) 형식으로 추가가능 */
+                .signWith(secretKey)               /* 서명 --> header + claim + secretKey */
+                .compact();
+    }
+    /*
+     * claim
+     * 비공개 - 내만 쓰는거 중복신경 안써도됨
+     * 공개 - 내가 LIB를 공개, 중복허용 안됨
+     * */
+
+    /* token 유효성 검증 테스트 */
+    public boolean validToken(String token) {
+        Jwts.parser()
+                .verifyWith(secretKey)
+                .build()
+                .parseSignedClaims(token);
+        boolean isCheck = true;
+        return isCheck;
+    }
+}
