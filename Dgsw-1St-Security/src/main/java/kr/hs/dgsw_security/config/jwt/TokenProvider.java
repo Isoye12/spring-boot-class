@@ -1,12 +1,14 @@
 package kr.hs.dgsw_security.config.jwt;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import kr.hs.dgsw_security.domain.User;
 import kr.hs.dgsw_security.repository.UserRepository;
+import kr.hs.dgsw_security.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -43,7 +45,7 @@ public class TokenProvider {
      * 7. 스프링 종료
      * */
 
-    public String createToken(User user, Duration expireAt) {
+    public String generateToken(User user, Duration expireAt) {
         Date now = new Date(); /* 자바에서는 원래 calendar써야함 */
         return makeToken(new Date(now.getTime() + expireAt.toMillis()), user);
     }
@@ -122,5 +124,15 @@ public class TokenProvider {
     public Authentication getAuthentication(String token) {
         String email = getSubject(token); /* 시용자 이메일 */
 
+        /* 토큰에서 추출한 이메일이 우리 디비에서 아직 사용가능한 이메일인지 재확인 */
+        User dbUser = userRepository.findByEmail(email)
+                /* 스프리에서는 null을 쓸 수 없음. 예외처리하기 위해 orElseThorw */
+                .orElseThrow(() -> new UsernameNotFoundException("User not found" + email));
+
+        CustomUserDetails customUserDetails = new CustomUserDetails( dbUser );
+
+        return new UsernamePasswordAuthenticationToken(
+                customUserDetails,
+                null, customUserDetails.getAuthorities());
     }
 }
