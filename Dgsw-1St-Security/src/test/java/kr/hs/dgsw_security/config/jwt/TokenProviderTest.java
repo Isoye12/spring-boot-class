@@ -16,6 +16,7 @@ import javax.crypto.SecretKey;
 
 import java.time.Duration;
 import java.util.Date;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -103,5 +104,28 @@ class TokenProviderTest {
 
         /* then - 결과 출력 */
         assertThat(_result).isTrue();
+    }
+
+    @DisplayName("토큰에서 인증 정보를 가지고 옵니다")
+    @Test
+    void getAuthentication() {
+        /* given */
+        String email = "test@dgsw.hs.kr";
+        User dbUser = userRepository.save(
+                User.builder()
+                        .email(email)
+                        .password("password")
+                        .role(UserRole.USER)
+                        .build()
+        );
+        String token = JwtFactory.builder()
+                .subject(email)
+                .claims(Map.of("id", dbUser.getId()))
+                .build()
+                .createToken(jwtProperties);
+
+        /* when */
+
+        /* then */
     }
 }
