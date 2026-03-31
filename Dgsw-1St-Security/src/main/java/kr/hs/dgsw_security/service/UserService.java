@@ -5,4 +5,5 @@ import kr.hs.dgsw_security.dto.SignupRequest;
 
 public interface UserService {
     User signUp(SignupRequest req);
+    User findById(Long id);
 }
