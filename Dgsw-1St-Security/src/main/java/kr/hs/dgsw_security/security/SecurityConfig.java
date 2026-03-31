@@ -1,5 +1,7 @@
 package kr.hs.dgsw_security.security;
 
+import kr.hs.dgsw_security.config.TokenAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 /*
  * 처음에 우리가 서비스 실행을 딱 하면 서버를 올리면, 이 클래스가 바로 호출이 되어야 사용자 접근을 어떻게 제한시킴.
@@ -20,7 +23,10 @@ import org.springframework.security.web.SecurityFilterChain;
  * SecurityFilterChain : 만들어진 보안.
  * */
 @Configuration  /* 이 틀래스는 설정 클래스이다 라고 tomcat container에게 알려주는 것 */
+@RequiredArgsConstructor
 public class SecurityConfig {
+    private final TokenAuthenticationFilter tokenAuthenticationFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable) /** csrf 공격 막을거면 이 부분을 지우는거임 */
@@ -34,7 +40,8 @@ public class SecurityConfig {
                 auth -> auth
                     .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
-            );
+            )
+            .addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
