@@ -18,4 +18,15 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
                         () -> new IllegalStateException("Unexcepted token")
                 );
     }
+
+    @Override
+    public RefreshToken saveOrUpdate(Long userId, String refreshToken) {
+        return refreshTokenRepository.findById(userId)
+                .map( entity -> entity.update(refreshToken) )
+                .map( refreshTokenRepository::save )
+                .orElseGet( () ->
+                        refreshTokenRepository.save(
+                                new RefreshToken(userId, refreshToken)
+                        ));
+    }
 }

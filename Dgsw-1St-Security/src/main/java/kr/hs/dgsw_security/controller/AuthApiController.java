@@ -1,8 +1,11 @@
 package kr.hs.dgsw_security.controller;
 
 import kr.hs.dgsw_security.domain.User;
+import kr.hs.dgsw_security.dto.AuthRequest;
+import kr.hs.dgsw_security.dto.AuthResponse;
 import kr.hs.dgsw_security.dto.SignupRequest;
 import kr.hs.dgsw_security.dto.UserResponse;
+import kr.hs.dgsw_security.service.AuthService;
 import kr.hs.dgsw_security.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController /** Controller + ResponseBody */
 @RequestMapping("/api/auth")
 public class AuthApiController {
+    private final AuthService authService;
     private final UserService userService;
     /*
      * 1. @RequestBody : body에 json으로 req
@@ -34,5 +38,11 @@ public class AuthApiController {
         User user = userService.signUp(req);
         UserResponse userResponse = new UserResponse(user.getId(), user.getEmail(), user.getRole());
         return ResponseEntity.ok(userResponse);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest req) {
+        AuthResponse authResponse = authService.login(req);
+        return ResponseEntity.ok(authResponse);
     }
 }

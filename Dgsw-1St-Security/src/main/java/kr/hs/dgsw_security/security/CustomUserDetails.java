@@ -1,6 +1,7 @@
 package kr.hs.dgsw_security.security;
 
 import kr.hs.dgsw_security.domain.User;
+import lombok.Getter;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 public class CustomUserDetails implements UserDetails {
+    @Getter /* user 변수만 Getter로 가져오기 */
     private final User user;
     private Collection<? extends GrantedAuthority> authorities;
 

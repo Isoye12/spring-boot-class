@@ -30,4 +30,9 @@ public class RefreshToken {
         this.refreshToken = refreshToken;
         return this;
     }
+
+    public RefreshToken update(String refreshToken) {
+        this.refreshToken = refreshToken;
+        return this;
+    }
 }
