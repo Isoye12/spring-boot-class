@@ -1,4 +1,7 @@
 package dgsw.service;
 
-public class RefreshTokenService {
+import dgsw.domain.RefreshToken;
+
+public interface RefreshTokenService {
+    RefreshToken findByRefreshToken(String refreshToken);
 }
