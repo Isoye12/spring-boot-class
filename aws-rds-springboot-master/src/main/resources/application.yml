@@ -2,7 +2,7 @@ server:
   port: 8080
 spring:
   datasource:
-    url: jdbc:mariadb://localhost:3333/dgsw_26_1st_01
+    url: jdbc:mariadb://localhost:3344/dgsw_26_1st_01
     username: root
     password: dgsw.hs.kr
     driver-class-name: org.mariadb.jdbc.Driver
@@ -10,3 +10,7 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost} # 자체 내부 변수가 있음
+      port: ${SPRING_DATA_REDIS_PORT:6379}      # 자체 내부 변수가 있음

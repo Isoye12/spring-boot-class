@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:  # 구동되는 이미지들을 싹다 적으면 됨
+  # 1. Redis 서버 컨테이너 작성
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  # 2. Spring Boot 서버 컨테이너
+  spring-boot-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATA_REDIS_HOST=redis  # 컨테이너 이름을 적은 것임 아까 이미지 설정해서 만들게싿고 선언한 redis... 같은 네트워크를 공유, so 이름으로 호출
+      - SPRING_DATA_REDIS_PORT=6379

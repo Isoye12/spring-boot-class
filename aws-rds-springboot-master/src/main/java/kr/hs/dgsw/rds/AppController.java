@@ -1,17 +1,27 @@
 package kr.hs.dgsw.rds;
 
 import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 public class AppController {
+  private final BoardRepository boardRepository;
+  private final StringRedisTemplate stringRedisTemplate;
 
-  private BoardRepository boardRepository;
-
-  public AppController(BoardRepository boardRepository) {
-    this.boardRepository = boardRepository;
+  @GetMapping("/redisHit")
+  public String redisHitCount() {
+    ValueOperations<String, String> vop
+            = stringRedisTemplate.opsForValue();
+    vop.increment("redisHitCount");
+    String _count = vop.get("redisHitCount");
+    return "redis Hit Count: " + _count;
   }
 
   @GetMapping("health")
